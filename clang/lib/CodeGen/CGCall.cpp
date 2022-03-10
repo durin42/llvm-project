@@ -3868,6 +3868,21 @@ void CodeGenFunction::EmitReturnValueCheck(llvm::Value *RV) {
   if (ReturnBlock.isValid() && ReturnBlock.getBlock()->use_empty())
     return;
 
+  const AllocAlignAttr *AA = CurCodeDecl->getAttr<AllocAlignAttr>();
+  if (SanOpts.has(SanitizerKind::Alignment) && AA) {
+    const FunctionDecl *F = dyn_cast<FunctionDecl>(CurCodeDecl);
+    if (F) {
+      unsigned PI = AA->getParamIndex().getLLVMIndex();
+      llvm::Value *Alignment = CurFn->getArg(PI);
+      emitAlignmentAssumption(RV, FnRetTy,
+                              // TODO: this first location seems like it should
+                              // be the _return_ statement is, but I'm not quite
+                              // sure how to figure that out from context here?
+                              AA->getLocation(), AA->getLocation(), Alignment,
+                              nullptr);
+    }
+  }
+
   ReturnsNonNullAttr *RetNNAttr = nullptr;
   if (SanOpts.has(SanitizerKind::ReturnsNonnullAttribute))
     RetNNAttr = CurCodeDecl->getAttr<ReturnsNonNullAttr>();

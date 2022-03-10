@@ -660,7 +660,9 @@ void CodeGenFunction::markAsIgnoreThreadCheckingAtRuntime(llvm::Function *Fn) {
 bool CodeGenFunction::requiresReturnValueCheck() const {
   return requiresReturnValueNullabilityCheck() ||
          (SanOpts.has(SanitizerKind::ReturnsNonnullAttribute) && CurCodeDecl &&
-          CurCodeDecl->getAttr<ReturnsNonNullAttr>());
+          CurCodeDecl->getAttr<ReturnsNonNullAttr>()) ||
+         (SanOpts.has(SanitizerKind::Alignment) && CurCodeDecl &&
+          CurCodeDecl->getAttr<AllocAlignAttr>());
 }
 
 static bool matchesStlAllocatorFn(const Decl *D, const ASTContext &Ctx) {
