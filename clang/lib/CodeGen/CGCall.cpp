@@ -4828,17 +4828,6 @@ public:
     AA = nullptr; // We're done. Disallow doing anything else.
     return NewAttrs;
   }
-
-  /// Emit alignment assumption.
-  /// This is a general fallback that we take if either there is an offset,
-  /// or the alignment is variable or we are sanitizing for alignment.
-  void EmitAsAnAssumption(SourceLocation Loc, QualType RetTy, RValue &Ret) {
-    if (!AA)
-      return;
-    CGF.emitAlignmentAssumption(Ret.getScalarVal(), RetTy, Loc,
-                                AA->getLocation(), Alignment, OffsetCI);
-    AA = nullptr; // We're done. Disallow doing anything else.
-  }
 };
 
 /// Helper data structure to emit `AssumeAlignedAttr`.
@@ -4857,6 +4846,17 @@ public:
         OffsetCI = nullptr;
     }
   }
+
+  /// Emit alignment assumption.
+  /// This is a general fallback that we take if either there is an offset,
+  /// or the alignment is variable or we are sanitizing for alignment.
+  void EmitAsAnAssumption(SourceLocation Loc, QualType RetTy, RValue &Ret) {
+    if (!AA)
+      return;
+    CGF.emitAlignmentAssumption(Ret.getScalarVal(), RetTy, Loc,
+                                AA->getLocation(), Alignment, OffsetCI);
+    AA = nullptr; // We're done. Disallow doing anything else.
+  }
 };
 
 /// Helper data structure to emit `AllocAlignAttr`.
@@ -4872,6 +4872,24 @@ public:
     Alignment = CallArgs[AA->getParamIndex().getLLVMIndex()]
                     .getRValue(CGF)
                     .getScalarVal();
+  }
+
+  [[nodiscard]] llvm::AttributeList
+  TryEmitAsCallSiteAttribute(const llvm::AttributeList &Attrs) {
+    llvm::AttributeList NewAttrs = Attrs;
+    if (AA)
+      NewAttrs = NewAttrs.addParamAttribute(CGF.getLLVMContext(),
+                                            AA->getParamIndex().getLLVMIndex(),
+                                            llvm::Attribute::AllocAlign);
+    // NOTE: we shouldn't _need_ to emit this `align` attribute here, but there
+    // are some interesting cases where LLVM can manage to delete the arguments
+    // to a function that has the `alloc_align` attribute on it, and then the
+    // alignment gets lost. An example of this is the failure you'll get in
+    // clang/test/Headers/mm_malloc.c if this `align` is omitted, because
+    // _mm_malloc ends up getting its arguments turned into constants that get
+    // passed to posix_memalign, which we don't have logic to handle in LLVM.
+    return AbstractAssumeAlignedAttrEmitter<
+        AllocAlignAttr>::TryEmitAsCallSiteAttribute(NewAttrs);
   }
 };
 
@@ -5806,7 +5824,6 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
   // Emit the assume_aligned check on the return value.
   if (Ret.isScalar() && TargetDecl) {
     AssumeAlignedAttrEmitter.EmitAsAnAssumption(Loc, RetTy, Ret);
-    AllocAlignAttrEmitter.EmitAsAnAssumption(Loc, RetTy, Ret);
   }
 
   // Explicitly call CallLifetimeEnd::Emit just to re-use the code even though
