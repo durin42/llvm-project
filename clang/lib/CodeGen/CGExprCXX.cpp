@@ -1323,9 +1323,15 @@ static RValue EmitNewDeleteCall(CodeGenFunction &CGF,
   ///
   /// We model such elidable calls with the 'builtin' attribute.
   llvm::Function *Fn = dyn_cast<llvm::Function>(CalleePtr);
-  if (CalleeDecl->isReplaceableGlobalAllocationFunction() &&
-      Fn && Fn->hasFnAttribute(llvm::Attribute::NoBuiltin)) {
-    CallOrInvoke->addFnAttr(llvm::Attribute::Builtin);
+  if (CalleeDecl->isReplaceableGlobalAllocationFunction()) {
+    if (Fn && Fn->hasFnAttribute(llvm::Attribute::NoBuiltin)) {
+      CallOrInvoke->addFnAttr(llvm::Attribute::Builtin);
+    }
+
+    if (CalleeDecl->getOverloadedOperator() == OO_Array_Delete ||
+        CalleeDecl->getOverloadedOperator() == OO_Delete) {
+      CallOrInvoke->addParamAttr(0, llvm::Attribute::AllocatedPointer);
+    }
   }
 
   return RV;

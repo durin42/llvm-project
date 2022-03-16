@@ -100,7 +100,7 @@ namespace test1 {
     // CHECK-NEXT: call void @_ZN5test11AD1Ev([[A]]* {{[^,]*}} [[CUR]])
     // CHECK-NEXT: [[ISDONE:%.*]] = icmp eq [[A]]* [[CUR]], [[BEGIN]]
     // CHECK-NEXT: br i1 [[ISDONE]]
-    // CHECK:      call void @_ZdaPv(i8* noundef [[ALLOC]])
+    // CHECK:      call void @_ZdaPv(i8* allocptr noundef [[ALLOC]])
   }
 }
 
@@ -146,7 +146,7 @@ namespace test4 {
     // CHECK-NEXT: [[DTOR:%.*]] = load void ([[X]]*)*, void ([[X]]*)** [[T0]]
     // CHECK-NEXT: call void [[DTOR]]([[X]]* {{[^,]*}} [[OBJ:%.*]])
     //   Call the global operator delete.
-    // CHECK-NEXT: call void @_ZdlPv(i8* noundef [[ALLOCATED]]) [[NUW:#[0-9]+]]
+    // CHECK-NEXT: call void @_ZdlPv(i8* allocptr noundef [[ALLOCATED]]) [[NUW:#[0-9]+]]
     ::delete xp;
   }
 }

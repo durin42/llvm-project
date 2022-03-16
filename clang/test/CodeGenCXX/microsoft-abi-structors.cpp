@@ -57,7 +57,7 @@ struct C {
 //
 // DTORS:      [[CALL_DELETE_LABEL]]
 // DTORS-NEXT:   %[[THIS_AS_VOID:[0-9a-z]+]] = bitcast %"struct.basic::C"* %[[THIS]] to i8*
-// DTORS-NEXT:   call void @"??3@YAXPAX@Z"(i8* %[[THIS_AS_VOID]])
+// DTORS-NEXT:   call void @"??3@YAXPAX@Z"(i8* allocptr %[[THIS_AS_VOID]])
 // DTORS-NEXT:   br label %[[CONTINUE_LABEL]]
 //
 // DTORS:      [[CONTINUE_LABEL]]
@@ -119,7 +119,7 @@ void call_deleting_dtor_and_global_delete(C *obj_ptr) {
 // CHECK-NEXT:   %[[PVDTOR:.*]] = getelementptr inbounds i8* (%"struct.basic::C"*, i32)*, i8* (%"struct.basic::C"*, i32)** %[[VTABLE]], i64 0
 // CHECK-NEXT:   %[[VDTOR:.*]] = load i8* (%"struct.basic::C"*, i32)*, i8* (%"struct.basic::C"*, i32)** %[[PVDTOR]]
 // CHECK-NEXT:   %[[CALL:.*]] = call x86_thiscallcc i8* %[[VDTOR]](%"struct.basic::C"* {{[^,]*}} %[[OBJ_PTR_VALUE]], i32 0)
-// CHECK-NEXT:   call void @"??3@YAXPAX@Z"(i8* %[[CALL]])
+// CHECK-NEXT:   call void @"??3@YAXPAX@Z"(i8* allocptr %[[CALL]])
 // CHECK:      ret void
 }
 

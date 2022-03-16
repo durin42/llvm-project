@@ -37,7 +37,7 @@ namespace test1 {
     // CHECK-NEXT: [[CAST:%.*]] = bitcast i8* [[NEW]] to [[A]]*
     // CHECK-NEXT: invoke void @_ZN5test11AC1Ei([[A]]* {{[^,]*}} [[CAST]], i32 5)
     // CHECK:      ret [[A]]* [[CAST]]
-    // CHECK:      call void @_ZdlPv(i8* [[NEW]])
+    // CHECK:      call void @_ZdlPv(i8* allocptr [[NEW]])
     return new A(5);
   }
 
@@ -48,7 +48,7 @@ namespace test1 {
     // CHECK-NEXT: [[FOO:%.*]] = invoke i32 @_ZN5test13fooEv()
     // CHECK:      invoke void @_ZN5test11AC1Ei([[A]]* {{[^,]*}} [[CAST]], i32 [[FOO]])
     // CHECK:      ret [[A]]* [[CAST]]
-    // CHECK:      call void @_ZdlPv(i8* [[NEW]])
+    // CHECK:      call void @_ZdlPv(i8* allocptr [[NEW]])
     extern int foo();
     return new A(foo());
   }
@@ -74,7 +74,7 @@ namespace test1 {
     // CHECK:      ret [[A]]* [[CAST]]
     // CHECK:      [[ISACTIVE:%.*]] = load i1, i1* [[ACTIVE]]
     // CHECK-NEXT: br i1 [[ISACTIVE]]
-    // CHECK:      call void @_ZdlPv(i8* [[NEW]])
+    // CHECK:      call void @_ZdlPv(i8* allocptr [[NEW]])
     return new A(B().x);
   }
 
@@ -102,7 +102,7 @@ namespace test1 {
     // CHECK:      ret [[A]]* [[CAST]]
     // CHECK:      [[ISACTIVE:%.*]] = load i1, i1* [[ACTIVE]]
     // CHECK-NEXT: br i1 [[ISACTIVE]]
-    // CHECK:      call void @_ZdlPv(i8* [[NEW]])
+    // CHECK:      call void @_ZdlPv(i8* allocptr [[NEW]])
     return new A(B());
   }
 
@@ -128,7 +128,7 @@ namespace test1 {
     // CHECK:      ret [[A]]* [[CAST]]
     // CHECK:      [[ISACTIVE:%.*]] = load i1, i1* [[ACTIVE]]
     // CHECK-NEXT: br i1 [[ISACTIVE]]
-    // CHECK:      call void @_ZdlPv(i8* [[NEW]])
+    // CHECK:      call void @_ZdlPv(i8* allocptr [[NEW]])
     return new A(B(), B());
   }
   A *f() {
@@ -165,7 +165,7 @@ namespace test1 {
     // CHECK:      ret [[A]]* [[RET]]
     // CHECK:      [[ISACTIVE:%.*]] = load i1, i1* [[ACTIVE]]
     // CHECK-NEXT: br i1 [[ISACTIVE]]
-    // CHECK:      call void @_ZdlPv(i8* [[NEW]])
+    // CHECK:      call void @_ZdlPv(i8* allocptr [[NEW]])
     A *x;
     return (x = new A(makeB()), makeB(), x);
   }
@@ -458,7 +458,7 @@ namespace test9 {
   }
   // CHECK: define{{.*}} {{%.*}}* @_ZN5test94testEv
   // CHECK: [[TEST9_NEW:%.*]] = call noalias nonnull i8* @_Znam
-  // CHECK: call void @_ZdaPv(i8* [[TEST9_NEW]])
+  // CHECK: call void @_ZdaPv(i8* allocptr [[TEST9_NEW]])
 }
 
 // In a destructor with a function-try-block, a return statement in a
